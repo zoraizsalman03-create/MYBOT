@@ -1,0 +1,39 @@
+import OpenAI from "openai";
+
+// 1. Setup your API connection
+const openai = new OpenAI({
+  apiKey: "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", // Replace with your actual API key
+});
+
+// 2. The core AI function
+async function runMyAITool(userInput) {
+  try {
+    console.log("Thinking...");
+    
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o", // or "gpt-3.5-turbo"
+      messages: [
+        { 
+          role: "system", 
+          content: "You are a specialized AI. Provide short, bulleted answers." 
+        },
+        { 
+          role: "user", 
+          content: userInput 
+        }
+      ],
+      temperature: 0.7,
+    });
+
+    // 3. Output the result
+    console.log("\n--- AI Response ---");
+    console.log(response.choices[0].message.content);
+    console.log("-------------------\n");
+
+  } catch (error) {
+    console.error("Error connecting to AI:", error.message);
+  }
+}
+
+// 4. Test the tool
+runMyAITool("What are the 3 best programming languages for AI?");
