@@ -1,0 +1,31 @@
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: "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", 
+});
+
+async function runMyAITool(userInput) {
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o", 
+      messages: [
+        { 
+          role: "system", 
+          content: "You are a specialized AI. Provide short, bulleted answers." 
+        },
+        { 
+          role: "user", 
+          content: userInput 
+        }
+      ],
+      temperature: 0.7,
+    });
+
+    console.log(response.choices[0].message.content);
+
+  } catch (error) {
+    console.error(error.message);
+  }
+}
+
+runMyAITool("What are the 3 best programming languages for AI?");
