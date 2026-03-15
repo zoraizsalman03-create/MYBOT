@@ -1,0 +1,81 @@
+import openai
+import tkinter as tk
+from tkinter import scrolledtext
+import pyttsx3
+import speech_recognition as sr
+from threading import Thread
+
+# ========== SETUP ==========
+openai.api_key = "YOUR_API_KEY"  # <-- yahan apna OpenAI API key daalo
+
+engine = pyttsx3.init()
+recognizer = sr.Recognizer()
+
+# ========== Functions ==========
+def speak(text):
+    engine.say(text)
+    engine.runAndWait()
+
+def listen():
+    with sr.Microphone() as source:
+        chat_box.insert(tk.END, "Listening...\n")
+        chat_box.yview(tk.END)
+        audio = recognizer.listen(source)
+        try:
+            return recognizer.recognize_google(audio)
+        except:
+            return ""
+
+def chat_with_ai(prompt):
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "You are a helpful AI assistant."},
+            {"role": "user", "content": prompt}
+        ],
+        max_tokens=150
+    )
+    return response.choices[0].message['content']
+
+def send_text():
+    user_input = text_input.get()
+    if user_input.strip() == "":
+        return
+    text_input.delete(0, tk.END)
+    chat_box.insert(tk.END, f"You: {user_input}\n")
+    chat_box.yview(tk.END)
+    Thread(target=ai_response, args=(user_input,)).start()
+
+def send_voice():
+    user_input = listen()
+    if user_input.strip() == "":
+        chat_box.insert(tk.END, "Voice not recognized.\n")
+        return
+    chat_box.insert(tk.END, f"You (voice): {user_input}\n")
+    chat_box.yview(tk.END)
+    Thread(target=ai_response, args=(user_input,)).start()
+
+def ai_response(user_input):
+    answer = chat_with_ai(user_input)
+    chat_box.insert(tk.END, f"AI: {answer}\n\n")
+    chat_box.yview(tk.END)
+    speak(answer)
+    with open("chat_history.txt", "a", encoding="utf-8") as f:
+        f.write(f"You: {user_input}\nAI: {answer}\n\n")
+
+# ========== GUI ==========
+root = tk.Tk()
+root.title("My AI Chatbot")
+root.geometry("600x500")
+
+chat_box = scrolledtext.ScrolledText(root, wrap=tk.WORD, width=70, height=25)
+chat_box.pack(padx=10, pady=10)
+
+text_input = tk.Entry(root, width=50)
+text_input.pack(side=tk.LEFT, padx=10)
+send_btn = tk.Button(root, text="Send", command=send_text)
+send_btn.pack(side=tk.LEFT)
+voice_btn = tk.Button(root, text="🎤 Voice", command=send_voice)
+voice_btn.pack(side=tk.LEFT)
+
+root.mainloop()
